@@ -5,12 +5,12 @@
 package openid
 
 import (
+	"bytes"
 	"errors"
 	"log"
 	"net/http"
-	"regexp"
-	"bytes"
 	"net/url"
+	"regexp"
 )
 
 // Verify that the url given match a successfull authentication
@@ -42,7 +42,6 @@ func Verify(url_ string) (grant bool, identifier string, err error) {
 }
 
 var REVerifyDirectIsValid = "is_valid:true"
-var REVerifyDirectNs = regexp.MustCompile("ns:([a-zA-Z0-9:/.]*)")
 
 // Like Verify on a parsed URL
 func VerifyValues(values url.Values) (grant bool, identifier string, err error) {
@@ -80,16 +79,6 @@ func VerifyValues(values url.Values) (grant bool, identifier string, err error) 
 	if err != nil {
 		log.Printf("VerifyValues failed reading response")
 		return false, "", err
-	}
-
-	// Check for ns
-	rematch := REVerifyDirectNs.FindSubmatch(buffer)
-	if rematch == nil {
-		return false, "", errors.New("VerifyValues: ns value not found on the response of the OP")
-	}
-	nsValue := string(rematch[1])
-	if !bytes.Equal([]byte(nsValue), []byte("http://specs.openid.net/auth/2.0")) {
-		return false, "", errors.New("VerifyValues: ns value not correct: " + nsValue)
 	}
 
 	// Check for is_valid
