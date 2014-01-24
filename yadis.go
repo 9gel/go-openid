@@ -16,11 +16,11 @@ import (
 	"strings"
 )
 
-func Yadis(ID string) (io.Reader, error) {
+func Yadis(ID string) (io.ReadCloser, error) {
 	return YadisVerbose(ID, nil)
 }
 
-func YadisVerbose(ID string, verbose *log.Logger) (io.Reader, error) {
+func YadisVerbose(ID string, verbose *log.Logger) (io.ReadCloser, error) {
 	r, err := YadisRequest(ID, "GET")
 	if err != nil || r == nil {
 		return nil, err
@@ -35,6 +35,7 @@ func YadisVerbose(ID string, verbose *log.Logger) (io.Reader, error) {
 		}
 		return r.Body, nil
 	}
+	defer r.Body.Close()
 
 	// If it is an HTML doc search for meta tags
 	if bytes.Equal([]byte(contentType), []byte("text/html")) {
@@ -68,7 +69,7 @@ func YadisRequest(url_ string, method string) (resp *http.Response, err error) {
 	resp = nil
 
 	var request = new(http.Request)
-	var client = new(http.Client)
+	var client = http.DefaultClient
 	var Header = make(http.Header)
 
 	request.Method = method
@@ -98,6 +99,7 @@ func YadisRequest(url_ string, method string) (resp *http.Response, err error) {
 		if response.StatusCode == 301 || response.StatusCode == 302 || response.StatusCode == 303 || response.StatusCode == 307 {
 			location := response.Header.Get("Location")
 			request.URL, err = url.Parse(location)
+			response.Body.Close()
 			if err != nil {
 				return nil, err
 			}
