@@ -29,7 +29,7 @@ func GetRedirectURL(Identifier string, realm string, returnto string) (string, e
 
 	// If it is a URL, the Yadis protocol [Yadis] SHALL be first attempted. If it succeeds, the result is again an XRDS document.
 	if IdType == IdentifierURL {
-		var reader io.Reader
+		var reader io.ReadCloser
 		reader, err = Yadis(Id)
 		if err != nil {
 			return "", err
@@ -37,6 +37,7 @@ func GetRedirectURL(Identifier string, realm string, returnto string) (string, e
 		if reader == nil {
 			return "", errors.New("Yadis returned an empty Reader for the ID: " + Id)
 		}
+		defer reader.Close()
 
 		var endpoint, claimedid = ParseXRDS(reader)
 		if len(endpoint) == 0 {
