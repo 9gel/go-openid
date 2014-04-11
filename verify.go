@@ -5,6 +5,7 @@
 package openid
 
 import (
+	"io/ioutil"
 	"bytes"
 	"errors"
 	"log"
@@ -71,11 +72,7 @@ func VerifyValues(values url.Values) (grant bool, identifier string, err error) 
 		return false, "", err
 	}
 
-	// Parse the response
-	// Convert the reader
-	// We limit the size of the response to 1024 bytes but it should be large enough for most cases
-	buffer := make([]byte, 1024)
-	_, err = response.Body.Read(buffer)
+	buffer, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.Printf("VerifyValues failed reading response")
 		return false, "", err
